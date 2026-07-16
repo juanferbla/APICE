@@ -1,0 +1,6 @@
+{
+  "name": "Dashboard de Productividad y Enlaces",
+  "description": "Una aplicación web interactiva para gestionar tus tareas, widgets, enlaces favoritos y medir tu desempeño semanal en múltiples dashboards personalizados.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
