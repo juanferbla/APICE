@@ -346,8 +346,8 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
       {/* Widget Header */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2 flex-shrink-0">
         <div className="flex items-center space-x-2">
-          <Clock className="w-4 h-4 text-indigo-500 animate-pulse" />
-          <span className="text-xs font-bold tracking-wider uppercase text-slate-500 font-sans">
+          <Clock className="w-4 h-4 animate-pulse" style={{ color: "var(--color-role-active)" }} />
+          <span className="text-xs font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400 font-sans">
             Reloj Digital & Tiempos
           </span>
         </div>
@@ -557,24 +557,25 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
           {/* Main Digital Clock Card */}
           <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-3.5 text-center flex flex-col items-center justify-center shadow-inner relative overflow-hidden group mb-2">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-emerald-500/5 opacity-40 pointer-events-none" />
-            <span className="font-mono text-3xl font-black tracking-tight text-slate-800 drop-shadow-sm select-all z-10">
+            <span className="font-mono text-3xl font-black tracking-tight text-slate-800 dark:text-slate-100 drop-shadow-sm select-all z-10">
               {localTimeStr}
             </span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 z-10 flex items-center space-x-1.5">
-              <CalendarDays className="w-3 h-3 text-indigo-500" />
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1.5 z-10 flex items-center space-x-1.5">
+              <CalendarDays className="w-3.5 h-3.5" style={{ color: "var(--color-role-active)" }} />
               <span>{localDateStr}</span>
             </span>
           </div>
 
           {/* Sub-Navigation Tabs */}
-          <div className="flex bg-slate-100 p-0.5 rounded-xl gap-0.5 flex-shrink-0">
+          <div className="flex bg-slate-100 dark:bg-slate-850 p-0.5 rounded-xl gap-0.5 flex-shrink-0">
             <button
               onClick={() => setActiveTab("world")}
-              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer ${
+              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer ${
                 activeTab === "world"
                   ? "bg-white text-slate-800 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
+              style={activeTab === "world" ? { color: "var(--color-role-active)" } : undefined}
               title="Horas Mundo"
             >
               <Globe className="w-3.5 h-3.5" />
@@ -582,11 +583,12 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
             </button>
             <button
               onClick={() => setActiveTab("countdown")}
-              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer ${
+              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer ${
                 activeTab === "countdown"
                   ? "bg-white text-slate-800 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
+              style={activeTab === "countdown" ? { color: "var(--color-role-active)" } : undefined}
               title="Cuentas Regresivas"
             >
               <Hourglass className="w-3.5 h-3.5" />
@@ -594,14 +596,15 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
             </button>
             <button
               onClick={() => setActiveTab("music")}
-              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center space-x-1 cursor-pointer ${
+              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer ${
                 activeTab === "music"
                   ? "bg-white text-slate-800 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
+              style={activeTab === "music" ? { color: "var(--color-role-active)" } : undefined}
               title="Música Focus"
             >
-              <Music className="w-3.5 h-3.5 text-indigo-500" />
+              <Music className="w-3.5 h-3.5" />
               <span>Música</span>
             </button>
           </div>
@@ -611,20 +614,20 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
             {activeTab === "world" && (
               <div className="space-y-1.5">
                 {clocks.map((c, idx) => (
-                  <div key={idx} className="flex justify-between items-center bg-slate-50/50 px-2.5 py-1.5 border border-slate-100 rounded-xl hover:shadow-sm hover:bg-slate-50 transition duration-150">
+                  <div key={idx} className="flex justify-between items-center bg-slate-50/50 dark:bg-slate-850 px-2.5 py-1.5 border border-slate-100 dark:border-slate-800 rounded-xl hover:shadow-sm hover:bg-slate-50 transition duration-150">
                     <div className="flex flex-col min-w-0 mr-2">
-                      <span className="text-[10px] font-bold text-slate-700 truncate">{c.label}</span>
-                      <span className="text-[8px] text-slate-400 font-semibold truncate">
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{c.label}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold truncate mt-0.5">
                         {c.timezone === "local" ? "Hora Local" : c.timezone}
                       </span>
                     </div>
-                    <span className="font-mono text-xs font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded-lg shrink-0">
+                    <span className="font-mono text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 px-2 py-0.5 rounded-lg shrink-0">
                       {getOffsetTime(time, c.timezone, showSeconds)}
                     </span>
                   </div>
                 ))}
                 {clocks.length === 0 && (
-                  <div className="text-center py-6 text-slate-400 text-[10px] font-semibold">
+                  <div className="text-center py-6 text-slate-500 dark:text-slate-400 text-xs font-semibold">
                     No hay relojes de zona configurados.
                   </div>
                 )}
@@ -640,18 +643,18 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
                       key={cd.id || idx} 
                       className={`px-2.5 py-1.5 border rounded-xl hover:shadow-sm transition duration-150 flex items-center justify-between min-w-0 ${
                         expired 
-                          ? "bg-emerald-50/70 border-emerald-100/80 text-emerald-800" 
-                          : "bg-indigo-50/50 border-indigo-100/60 text-indigo-900"
+                          ? "bg-emerald-50/70 border-emerald-100/80 dark:bg-emerald-950/20 dark:border-emerald-900/40 text-emerald-800 dark:text-emerald-300" 
+                          : "bg-indigo-50/50 border-indigo-100/60 dark:bg-indigo-950/20 dark:border-indigo-900/40 text-indigo-900 dark:text-indigo-300"
                       }`}
                     >
                       <div className="flex flex-col min-w-0 mr-2">
-                        <span className="text-[10px] font-black truncate">{cd.label}</span>
-                        <span className="text-[8px] text-slate-400 font-semibold">
+                        <span className="text-xs font-bold truncate">{cd.label}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
                           {new Date(cd.date).toLocaleDateString()}
                         </span>
                       </div>
-                      <span className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-lg shrink-0 ${
-                        expired ? "bg-emerald-100 text-emerald-900" : "bg-indigo-100 text-indigo-950"
+                      <span className={`font-mono text-xs font-bold px-1.5 py-0.5 rounded-lg shrink-0 ${
+                        expired ? "bg-emerald-100 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100" : "bg-indigo-100 dark:bg-indigo-900 text-indigo-950 dark:text-indigo-100"
                       }`}>
                         {text}
                       </span>
@@ -659,7 +662,7 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
                   );
                 })}
                 {finalCountdowns.length === 0 && (
-                  <div className="text-center py-6 text-slate-400 text-[10px] font-semibold">
+                  <div className="text-center py-6 text-slate-500 dark:text-slate-400 text-xs font-semibold">
                     No hay cuentas regresivas configuradas.
                   </div>
                 )}
@@ -683,16 +686,16 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
                       {isPlayingMusic ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                     </button>
                     <div className="flex flex-col min-w-0">
-                      <span className="text-[10px] font-bold text-slate-700">
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
                         {isPlayingMusic ? "Música Activa 🎵" : "Música Pausada 🔇"}
                       </span>
-                      <span className="text-[8px] text-slate-400 font-bold truncate max-w-[110px]">
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold truncate max-w-[110px] mt-0.5">
                         {musicPresetId === "custom" ? "Video personalizado" : MUSIC_PRESETS.find(p => p.id === musicPresetId)?.label || "Focus Lofi"}
                       </span>
                     </div>
                   </div>
 
-                  <label className="flex items-center space-x-1.5 cursor-pointer text-[10px] font-bold text-slate-600 shrink-0">
+                  <label className="flex items-center space-x-1.5 cursor-pointer text-xs font-bold text-slate-600 dark:text-slate-300 shrink-0">
                     <input
                       type="checkbox"
                       checked={showVideo}
@@ -708,7 +711,7 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
 
                 {/* Quick Presets Grid */}
                 <div className="space-y-1">
-                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
                     Canales de Enfoque Rápido
                   </span>
                   <div className="grid grid-cols-2 gap-1">
@@ -718,10 +721,10 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
                         <button
                           key={preset.id}
                           onClick={() => handleSelectPreset(preset)}
-                          className={`px-2 py-1.5 rounded-lg border text-[9px] font-bold text-left truncate transition cursor-pointer flex items-center justify-between ${
+                          className={`px-2 py-1.5 rounded-lg border text-xs font-bold text-left truncate transition cursor-pointer flex items-center justify-between ${
                             isSelected
-                              ? "bg-indigo-50 border-indigo-200 text-indigo-700 font-extrabold shadow-sm"
-                              : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50 hover:border-slate-200"
+                              ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-extrabold shadow-sm"
+                              : "bg-white border-slate-100 dark:bg-slate-900 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 hover:border-slate-200 dark:hover:bg-slate-800"
                           }`}
                         >
                           <span className="truncate">{preset.label}</span>
@@ -740,7 +743,7 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
 
                 {/* Custom URL Input */}
                 <div className="space-y-1">
-                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
                     Reproducir cualquier video de YouTube
                   </span>
                   <div className="flex gap-1">
@@ -753,14 +756,14 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
                           setCustomYoutubeInput(e.target.value);
                           setInputError(false);
                         }}
-                        className={`w-full pl-2 pr-6 py-1 bg-white border rounded-lg outline-none text-[9px] font-medium focus:border-indigo-500 ${
-                          inputError ? "border-red-400 focus:border-red-500" : "border-slate-200"
+                        className={`w-full pl-2 pr-6 py-1 bg-white dark:bg-slate-900 border rounded-lg outline-none text-xs font-medium focus:border-indigo-500 ${
+                          inputError ? "border-red-400 focus:border-red-500" : "border-slate-200 dark:border-slate-800"
                         }`}
                       />
                       {customYoutubeInput && (
                         <button
                           onClick={() => setCustomYoutubeInput("")}
-                          className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[10px]"
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
                         >
                           ✕
                         </button>
@@ -768,14 +771,14 @@ export default function ClockWidget({ data, onChange, isEditing }: ClockWidgetPr
                     </div>
                     <button
                       onClick={handleLoadCustomVideo}
-                      className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition text-[9px] cursor-pointer flex items-center space-x-1 shrink-0"
+                      className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition text-xs cursor-pointer flex items-center space-x-1 shrink-0"
                     >
                       <Youtube className="w-3 h-3 text-red-400 fill-current" />
                       <span>Cargar</span>
                     </button>
                   </div>
                   {inputError && (
-                    <span className="text-[8px] font-bold text-red-500 block leading-tight">
+                    <span className="text-xs font-bold text-red-500 dark:text-red-400 block leading-tight">
                       URL inválida. Ingresa un link completo o ID de 11 letras.
                     </span>
                   )}

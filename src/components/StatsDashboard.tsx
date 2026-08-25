@@ -8,7 +8,7 @@ interface StatsDashboardProps {
   sessions: FocusSession[];
 }
 
-const COLORS = ["#4f46e5", "#8b5cf6", "#0d9488", "#d97706", "#dc2626", "#475569"];
+const COLORS = ["#4F6BFF", "#7C3AED", "#0F766E", "#EA580C", "#DC2626", "#64748B"];
 const PATTERN_COLORS = [
   "url(#pattern-stripes-blue)",
   "url(#pattern-stripes-purple)",
@@ -89,28 +89,28 @@ export default function StatsDashboard({ sessions }: StatsDashboardProps) {
       <svg width="0" height="0" className="absolute">
         <defs>
           <pattern id="pattern-stripes-blue" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="8" height="16" fill="#4f46e5" />
-            <rect x="8" width="8" height="16" fill="#6366f1" />
+            <rect width="8" height="16" fill="#4F6BFF" />
+            <rect x="8" width="8" height="16" fill="#7A5AF8" />
           </pattern>
           <pattern id="pattern-stripes-purple" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="8" height="16" fill="#8b5cf6" />
-            <rect x="8" width="8" height="16" fill="#a78bfa" />
+            <rect width="8" height="16" fill="#7C3AED" />
+            <rect x="8" width="8" height="16" fill="#8B5CF6" />
           </pattern>
           <pattern id="pattern-stripes-teal" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="8" height="16" fill="#0d9488" />
-            <rect x="8" width="8" height="16" fill="#2dd4bf" />
+            <rect width="8" height="16" fill="#0F766E" />
+            <rect x="8" width="8" height="16" fill="#14B8A6" />
           </pattern>
           <pattern id="pattern-stripes-amber" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="8" height="16" fill="#d97706" />
-            <rect x="8" width="8" height="16" fill="#fbbf24" />
+            <rect width="8" height="16" fill="#EA580C" />
+            <rect x="8" width="8" height="16" fill="#F59E0B" />
           </pattern>
           <pattern id="pattern-stripes-red" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="8" height="16" fill="#dc2626" />
-            <rect x="8" width="8" height="16" fill="#f87171" />
+            <rect width="8" height="16" fill="#DC2626" />
+            <rect x="8" width="8" height="16" fill="#EF4444" />
           </pattern>
           <pattern id="pattern-stripes-slate" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="8" height="16" fill="#475569" />
-            <rect x="8" width="8" height="16" fill="#94a3b8" />
+            <rect width="8" height="16" fill="#64748B" />
+            <rect x="8" width="8" height="16" fill="#94A3B8" />
           </pattern>
         </defs>
       </svg>
@@ -225,7 +225,7 @@ export default function StatsDashboard({ sessions }: StatsDashboardProps) {
                   </div>
                   {aiTips.length > 0 && (
                     <div className="space-y-1.5">
-                      <p className="font-bold text-indigo-800 uppercase tracking-wider text-[9px]">Recomendaciones Senda:</p>
+                      <p className="font-bold text-indigo-800 uppercase tracking-wider text-[9px]">Recomendaciones Ommm:</p>
                       <ul className="space-y-1 list-disc pl-4 text-slate-600">
                         {aiTips.map((tip, idx) => (
                           <li key={idx}>{tip}</li>

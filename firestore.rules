@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Helper to validate incoming user schema
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'username', 'photoURL', 'createdAt', 'dashboards'])
+        && data.keys().size() == 5
+        && data.email is string
+        && data.email.size() <= 256
+        && data.username is string
+        && data.username.size() <= 128
+        && data.photoURL is string
+        && data.photoURL.size() <= 2000000
+        && data.dashboards is list;
+    }
+
+    // Helper to validate incoming session schema
+    function isValidSession(data) {
+      return data.keys().hasAll(['id', 'startTime', 'endTime', 'activityState', 'durationSeconds'])
+        && data.keys().size() == 5
+        && data.id is string
+        && data.id.size() <= 128
+        && data.startTime is string
+        && data.startTime.size() <= 64
+        && data.endTime is string
+        && data.endTime.size() <= 64
+        && data.activityState is string
+        && data.activityState.size() <= 64;
+    }
+
+    // Match block for users collection
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow delete: if false;
+
+      // Match block for sessions subcollection
+      match /sessions/{sessionId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}

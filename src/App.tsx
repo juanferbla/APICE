@@ -26,6 +26,8 @@ import {
   Clock,
   Timer,
   CloudSun,
+  Sun,
+  Moon,
   Calculator,
   FileText,
   Image as ImageIcon,
@@ -34,15 +36,22 @@ import {
   Globe,
   CheckSquare,
   Flame,
-  Calendar
+  Calendar,
+  Heart,
+  Activity
 } from "lucide-react";
 import { api } from "./utils/api";
 import { User as UserType, Dashboard, Widget, FocusSession } from "./types";
 import AuthScreen from "./components/AuthScreen";
 import StatusTracker from "./components/StatusTracker";
 import StatsDashboard from "./components/StatsDashboard";
+import ProfileModal from "./components/ProfileModal";
+import { auth, db } from "./lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 // Widgets components
+import TimeMachineWidget from "./components/TimeMachineWidget";
 import ClockWidget from "./components/ClockWidget";
 import PomodoroWidget from "./components/PomodoroWidget";
 import WeatherWidget from "./components/WeatherWidget";
@@ -57,13 +66,15 @@ import HabitTrackerWidget from "./components/HabitTrackerWidget";
 import DailyPlannerWidget from "./components/DailyPlannerWidget";
 
 const DASHBOARD_TYPES = [
-  { id: "personal", label: "Personal", icon: Home },
-  { id: "trabajo", label: "Trabajo", icon: Briefcase },
-  { id: "estudio", label: "Estudio", icon: GraduationCap },
-  { id: "hobbies", label: "Hobbies", icon: Zap }
+  { id: "personal", label: "Personal", icon: Home, color: "#16A34A" },
+  { id: "trabajo", label: "Trabajo", icon: Briefcase, color: "#4F6BFF" },
+  { id: "estudio", label: "Aprendizaje", icon: GraduationCap, color: "#EA580C" },
+  { id: "hogar", label: "Salud & Hogar", icon: Heart, color: "#14B8A6" },
+  { id: "hobbies", label: "Pasión / Hobbies", icon: Zap, color: "#8B5CF6" }
 ];
 
 const WIDGET_OPTIONS = [
+  { type: "time-machine", label: "Máquina del Tiempo (Reloj, Pomodoro & Música)", icon: Timer, defaultTitle: "Máquina del Tiempo" },
   { type: "clock", label: "Reloj & Cuenta Regresiva", icon: Clock, defaultTitle: "Hora Mundial" },
   { type: "pomodoro", label: "Pomodoro Focus Timer", icon: Timer, defaultTitle: "Enfoque Activo" },
   { type: "weather", label: "Clima & Comparador", icon: CloudSun, defaultTitle: "Clima Global" },
@@ -83,10 +94,60 @@ export default function App() {
   const [currentView, setCurrentView] = useState<"dashboard" | "stats">("dashboard");
   const [activeDashboardId, setActiveDashboardId] = useState<string>("personal");
   
+  // Theme state: light | dark | auto
+  const [themePref, setThemePref] = useState<"light" | "dark" | "auto">(() => {
+    return (localStorage.getItem("ommm_theme_preference") as "light" | "dark" | "auto") || (localStorage.getItem("senda_theme_preference") as "light" | "dark" | "auto") || "auto";
+  });
+  const [isDark, setIsDark] = useState(false);
+
+  // Synchronize and detect theme changes
+  useEffect(() => {
+    const updateTheme = () => {
+      if (themePref === "dark") {
+        setIsDark(true);
+      } else if (themePref === "light") {
+        setIsDark(false);
+      } else {
+        // Auto mode based on hour of day: night starts at 7 PM (19:00) and ends at 7 AM (07:00)
+        const hour = new Date().getHours();
+        setIsDark(hour < 7 || hour >= 19);
+      }
+    };
+
+    updateTheme();
+    localStorage.setItem("ommm_theme_preference", themePref);
+
+    const interval = setInterval(updateTheme, 60000);
+    return () => clearInterval(interval);
+  }, [themePref]);
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDark]);
+
+  // Synchronize dynamic Adaptive Role Accent color with active dashboard
+  useEffect(() => {
+    const roleColors: Record<string, string> = {
+      personal: isDark ? "#5BE2A9" : "#16A34A",       // Beautiful mint-green matching mockup
+      trabajo: isDark ? "#60A5FA" : "#4F6BFF",        // Electric sky blue
+      estudio: isDark ? "#FB923C" : "#EA580C",        // Warm sunset orange
+      hogar: isDark ? "#2DD4BF" : "#14B8A6",          // Pure turquoise/teal
+      hobbies: isDark ? "#C084FC" : "#8B5CF6",        // Glowing lavender purple
+      relaciones: isDark ? "#F472B6" : "#EC4899"      // Soft wellness rose
+    };
+    const activeColor = roleColors[activeDashboardId] || (isDark ? "#5BE2A9" : "#16A34A");
+    document.documentElement.style.setProperty("--color-role-active-val", activeColor);
+  }, [activeDashboardId, isDark]);
+
   // Dashboard state
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [isEditingLayout, setIsEditingLayout] = useState(false);
   const [showAddWidgetModal, setShowAddWidgetModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Stats sessions
   const [sessions, setSessions] = useState<FocusSession[]>([]);
@@ -95,32 +156,100 @@ export default function App() {
   const [renamingWidgetId, setRenamingWidgetId] = useState<string | null>(null);
   const [tempWidgetTitle, setTempWidgetTitle] = useState("");
 
-  // Check auth session on startup
+  // Check auth session on startup reactively via Firebase Auth
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const userId = api.getUserId();
-        if (userId) {
-          setUser({
-            id: userId,
-            email: "juanferbla@gmail.com",
-            username: "Juan Fernando"
-          });
-          loadUserDashboards();
-          loadUserSessions();
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        if (firebaseUser.emailVerified) {
+          try {
+            const docRef = doc(db, "users", firebaseUser.uid);
+            const docSnap = await getDoc(docRef);
+            let username = firebaseUser.displayName || "Usuario";
+            let photoURL = firebaseUser.photoURL || "";
+            
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              username = data.username || username;
+              photoURL = data.photoURL || photoURL;
+            }
+            
+            const fetchedUser: UserType = {
+              id: firebaseUser.uid,
+              email: firebaseUser.email || "",
+              username,
+              photoURL,
+            };
+            
+            setUser(fetchedUser);
+            api.setUserId(firebaseUser.uid);
+          } catch (err) {
+            console.error("Error fetching user document on state change:", err);
+          }
+        } else {
+          setUser(null);
         }
-      } catch (err) {
-        console.log("No active session found");
+      } else {
+        setUser(null);
       }
-    };
-    checkAuth();
+    });
+    return () => unsubscribe();
   }, []);
+
+  // Fetch dashboards and sessions once user is successfully logged in and verified
+  useEffect(() => {
+    if (user?.id) {
+      loadUserDashboards();
+      loadUserSessions();
+    }
+  }, [user?.id]);
 
   const loadUserDashboards = async () => {
     try {
       const data = await api.getDashboards();
       if (data && data.length > 0) {
-        setDashboards(data);
+        // Ensure all role dashboards have the new unified "Máquina del Tiempo"
+        const migrated = data.map((dash) => {
+          const hasTimeMachine = dash.widgets.some((w) => w.type === "time-machine");
+          if (!hasTimeMachine) {
+            // Replace standalone clock or pomodoro with time-machine, or prepend
+            const filtered = dash.widgets.filter((w) => w.type !== "clock" && w.type !== "pomodoro");
+            const newWidget: Widget = {
+              id: `w-${dash.id}-timemachine`,
+              type: "time-machine",
+              title: "Máquina del Tiempo",
+              x: 0,
+              y: 0,
+              w: 4,
+              h: 5,
+              color: "bg-slate-900/60 backdrop-blur-md border border-slate-700/50",
+              data: {
+                activeTab: dash.id === "hogar" ? "clock" : dash.id === "hobbies" ? "music" : "pomodoro",
+                workTime: dash.id === "trabajo" ? 45 : dash.id === "estudio" ? 30 : 25,
+                shortBreak: dash.id === "trabajo" ? 10 : 5,
+                longBreak: dash.id === "trabajo" ? 20 : 15,
+                showSeconds: true,
+                is24Hour: true,
+                musicPresetId: dash.id === "trabajo" ? "synth" : dash.id === "estudio" ? "piano" : dash.id === "hobbies" ? "jazz" : dash.id === "hogar" ? "nature" : "lofi",
+                youtubeVideoId: dash.id === "trabajo" ? "4xDzrJKXOOY" : dash.id === "estudio" ? "Dx5qFedd3Y4" : dash.id === "hobbies" ? "5wSBy6Yq_A8" : dash.id === "hogar" ? "M0AWBn_bS0U" : "jfKfPfyJRdk",
+                clocks: [
+                  { label: "Local", timezone: "local" },
+                  { label: "Madrid", timezone: "Europe/Madrid" },
+                  { label: "New York", timezone: "America/New_York" }
+                ],
+                countdowns: [
+                  { id: `cd-${dash.id}-1`, label: "Fin de Año 2026", date: "2026-12-31T23:59:59", icon: "✨" }
+                ]
+              }
+            };
+            return {
+              ...dash,
+              widgets: [newWidget, ...filtered]
+            };
+          }
+          return dash;
+        });
+
+        setDashboards(migrated);
       }
     } catch (err) {
       console.error("Failed to load dashboards:", err);
@@ -140,13 +269,11 @@ export default function App() {
 
   const handleAuthSuccess = (authenticatedUser: UserType) => {
     setUser(authenticatedUser);
-    loadUserDashboards();
-    loadUserSessions();
   };
 
   const handleLogout = async () => {
     try {
-      api.setUserId("");
+      await api.logout();
       setUser(null);
       setDashboards([]);
       setSessions([]);
@@ -198,6 +325,29 @@ export default function App() {
     if (!activeDashboard) return;
 
     const option = WIDGET_OPTIONS.find((opt) => opt.type === type);
+    
+    let defaultData: any = {};
+    if (type === "time-machine") {
+      defaultData = {
+        activeTab: "pomodoro",
+        workTime: 25,
+        shortBreak: 5,
+        longBreak: 15,
+        showSeconds: true,
+        is24Hour: true,
+        musicPresetId: "lofi",
+        youtubeVideoId: "jfKfPfyJRdk",
+        clocks: [
+          { label: "Local", timezone: "local" },
+          { label: "Madrid", timezone: "Europe/Madrid" },
+          { label: "New York", timezone: "America/New_York" }
+        ],
+        countdowns: [
+          { id: `cd-${Date.now()}`, label: "Fin de Año 2026", date: "2026-12-31T23:59:59", icon: "✨" }
+        ]
+      };
+    }
+
     const newWidget: Widget = {
       id: `w-${type}-${Date.now()}`,
       type: type as any,
@@ -205,9 +355,9 @@ export default function App() {
       x: 0,
       y: 0,
       w: (type === "daily-planner" || type === "bookmarks" || type === "weather") ? 5 : 4,
-      h: 4,
+      h: type === "time-machine" ? 5 : 4,
       color: "bg-slate-900/60 backdrop-blur-md border border-slate-700/50",
-      data: {}
+      data: defaultData
     };
 
     const updatedWidgets = [...activeDashboard.widgets, newWidget];
@@ -341,6 +491,8 @@ export default function App() {
     };
 
     switch (w.type) {
+      case "time-machine":
+        return <TimeMachineWidget {...props} />;
       case "clock":
         return <ClockWidget {...props} />;
       case "pomodoro":
@@ -375,31 +527,31 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans relative overflow-hidden selection:bg-indigo-500/20 selection:text-indigo-900">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#070A12] text-slate-800 dark:text-slate-100 flex flex-col font-sans relative overflow-hidden selection:bg-indigo-500/20 selection:text-indigo-900 transition-colors duration-300">
       
       {/* Background Ambient Glow Circles mimicking the target dashboard image */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-100/35 rounded-full filter blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-pink-100/35 rounded-full filter blur-[130px] pointer-events-none" />
-      <div className="absolute top-[35%] right-[15%] w-[40%] h-[40%] bg-sky-100/25 rounded-full filter blur-[110px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-100/35 dark:bg-indigo-950/15 rounded-full filter blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-pink-100/35 dark:bg-purple-950/10 rounded-full filter blur-[130px] pointer-events-none" />
+      <div className="absolute top-[35%] right-[15%] w-[40%] h-[40%] bg-sky-100/25 dark:bg-blue-950/10 rounded-full filter blur-[110px] pointer-events-none" />
       
       {/* Premium Header - White Glossy Glassmorphic Design */}
-      <header className="sticky top-0 z-50 bg-white/75 backdrop-blur-xl border-b border-slate-200/60 px-4 py-3 sm:px-6 flex items-center justify-between shadow-[0_2px_15px_rgba(0,0,0,0.01)]">
+      <header className="sticky top-0 z-50 bg-white/75 dark:bg-slate-900/85 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800 px-4 py-3 sm:px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-[0_2px_15px_rgba(0,0,0,0.01)]">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-600/20">
+          <div className="p-2 text-white rounded-xl shadow-lg transition-all duration-300" style={{ backgroundColor: "var(--color-role-active)" }}>
             <Layout className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-sm font-black tracking-tight text-slate-900 leading-none font-display">Senda Dashboard</h1>
-            <p className="text-[10px] text-indigo-600 font-extrabold uppercase tracking-widest mt-1">Organizador Diario Todo-en-Uno</p>
+            <h1 className="text-sm font-black tracking-tight text-slate-900 dark:text-white leading-none font-display">Ommm Dashboard</h1>
+            <p className="text-[10px] font-extrabold uppercase tracking-widest mt-1 transition-colors duration-300" style={{ color: "var(--color-role-active)" }}>Organizador Diario Todo-en-Uno</p>
           </div>
         </div>
 
         {/* View selection tabs - High Fidelity Styled */}
-        <div className="flex bg-slate-100 border border-slate-200 p-0.5 rounded-xl text-xs text-slate-500 font-bold shadow-inner">
+        <div className="flex bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 p-0.5 rounded-xl text-xs text-slate-500 dark:text-slate-400 font-bold shadow-inner justify-center">
           <button
             onClick={() => setCurrentView("dashboard")}
             className={`px-3.5 py-1.5 rounded-lg transition cursor-pointer flex items-center space-x-1.5 ${
-              currentView === "dashboard" ? "bg-white text-slate-900 border border-slate-200/40 shadow-sm" : "hover:text-slate-900"
+              currentView === "dashboard" ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200/40 dark:border-slate-750 shadow-sm" : "hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <Grid className="w-4 h-4 text-indigo-500" />
@@ -408,7 +560,7 @@ export default function App() {
           <button
             onClick={() => setCurrentView("stats")}
             className={`px-3.5 py-1.5 rounded-lg transition cursor-pointer flex items-center space-x-1.5 ${
-              currentView === "stats" ? "bg-white text-slate-900 border border-slate-200/40 shadow-sm" : "hover:text-slate-900"
+              currentView === "stats" ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200/40 dark:border-slate-750 shadow-sm" : "hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -417,29 +569,73 @@ export default function App() {
         </div>
 
         {/* User profile & logout actions - High Fidelity */}
-        <div className="flex items-center space-x-3">
-          <div className="hidden md:flex items-center space-x-2 bg-white/80 border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm">
-            <div className="w-5.5 h-5.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold text-[10px]">
-              {user.email.slice(0, 2).toUpperCase()}
-            </div>
-            <span className="text-xs font-bold text-slate-700 truncate max-w-[120px]">{user.email}</span>
+        <div className="flex items-center justify-between md:justify-end space-x-3 w-full md:w-auto">
+          {/* Theme Selector Pill Group */}
+          <div className="flex bg-slate-100/80 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 p-0.5 rounded-xl text-xs font-bold shadow-inner">
+            <button
+              onClick={() => setThemePref("light")}
+              className={`p-1.5 rounded-lg transition cursor-pointer ${
+                themePref === "light" ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              }`}
+              title="Modo Claro"
+            >
+              <Sun className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setThemePref("dark")}
+              className={`p-1.5 rounded-lg transition cursor-pointer ${
+                themePref === "dark" ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              }`}
+              title="Modo Oscuro"
+            >
+              <Moon className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setThemePref("auto")}
+              className={`p-1.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                themePref === "auto" ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              }`}
+              title="Automático (Día/Noche)"
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span className="text-[9px] uppercase font-black tracking-wider px-0.5 hidden sm:inline">Auto</span>
+            </button>
           </div>
 
-          <button
-            onClick={handleLogout}
-            className="p-2 hover:bg-red-50 border border-transparent hover:border-red-100 rounded-xl text-slate-400 hover:text-red-500 transition cursor-pointer shadow-sm bg-white"
-            title="Cerrar Sesión"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="flex items-center space-x-2 bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-750 px-3 py-1.5 rounded-xl shadow-sm cursor-pointer transition"
+              title="Mi Cuenta"
+            >
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt={user.username}
+                  referrerPolicy="no-referrer"
+                  className="w-5.5 h-5.5 rounded-full object-cover border border-slate-200 dark:border-slate-750"
+                />
+              ) : (
+                <div className="w-5.5 h-5.5 bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center font-bold text-[10px]">
+                  {user.username ? user.username.slice(0, 2).toUpperCase() : user.email.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[100px]">{user.username || user.email}</span>
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="p-2 bg-white dark:bg-slate-850 hover:bg-red-50 dark:hover:bg-red-950/30 border border-slate-200 dark:border-slate-750 hover:border-red-100 dark:hover:border-red-900/50 rounded-xl text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition cursor-pointer shadow-sm bg-white"
+              title="Cerrar Sesión"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Main Workspace Frame */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
-        
-        {/* Status tracker bar */}
-        <StatusTracker onSessionLogged={loadUserSessions} />
 
         {currentView === "stats" ? (
           <StatsDashboard sessions={sessions} />
@@ -447,7 +643,7 @@ export default function App() {
           <div className="space-y-6">
             
             {/* Dashboard category switchboard and custom filter toolbar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white/65 border border-slate-200/60 p-3.5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] backdrop-blur-md">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white/65 dark:bg-slate-900/65 border border-slate-200/60 dark:border-slate-800/80 p-3.5 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.01)] backdrop-blur-md">
               <div className="flex flex-wrap gap-2">
                 {DASHBOARD_TYPES.map((d) => {
                   const isActive = activeDashboardId === d.id;
@@ -456,13 +652,22 @@ export default function App() {
                     <button
                       key={d.id}
                       onClick={() => setActiveDashboardId(d.id)}
-                      className={`px-4 py-2 rounded-xl border font-bold text-xs transition cursor-pointer flex items-center space-x-2 ${
+                      className={`px-4 py-2 rounded-xl border font-bold text-xs transition-all duration-300 cursor-pointer flex items-center space-x-2 ${
                         isActive
-                          ? "bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-600/15"
-                          : "bg-white border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 shadow-sm"
+                          ? "text-white shadow-lg"
+                          : "bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 shadow-sm"
                       }`}
+                      style={
+                        isActive
+                          ? {
+                              backgroundColor: d.color,
+                              borderColor: d.color,
+                              boxShadow: `0 10px 20px -3px ${d.color}35`
+                            }
+                          : undefined
+                      }
                     >
-                      <Icon className={`w-4 h-4 ${isActive ? "text-white animate-pulse" : "text-slate-400"}`} />
+                      <Icon className={`w-4 h-4 ${isActive ? "text-white animate-pulse" : "text-slate-400 dark:text-slate-500"}`} />
                       <span>{d.label}</span>
                     </button>
                   );
@@ -475,8 +680,8 @@ export default function App() {
                   onClick={() => setIsEditingLayout(!isEditingLayout)}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-sm ${
                     isEditingLayout
-                      ? "bg-emerald-600 border-emerald-400 text-white animate-pulse shadow-md shadow-emerald-600/15"
-                      : "bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                      ? "bg-emerald-600 border-emerald-400 dark:border-emerald-500 text-white animate-pulse shadow-md shadow-emerald-600/15"
+                      : "bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
                   }`}
                 >
                   {isEditingLayout ? (
@@ -496,7 +701,7 @@ export default function App() {
                   <>
                     <button
                       onClick={() => setShowAddWidgetModal(true)}
-                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 text-white text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-indigo-600/10"
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 dark:border-indigo-500 text-white text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-md shadow-indigo-600/10"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Añadir Bloque</span>
@@ -504,7 +709,7 @@ export default function App() {
 
                     <button
                       onClick={handleResetDefaultLayout}
-                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
+                      className="px-3 py-1.5 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
                       title="Reiniciar a valores por defecto"
                     >
                       <Undo className="w-4 h-4" />
@@ -514,6 +719,9 @@ export default function App() {
                 )}
               </div>
             </div>
+
+            {/* Status tracker bar matching current active role */}
+            <StatusTracker activeDashboardId={activeDashboardId} onSessionLogged={loadUserSessions} />
 
             {/* Widgets layout Grid */}
             {activeDashboard && activeDashboard.widgets.length === 0 ? (
@@ -716,8 +924,17 @@ export default function App() {
 
       {/* Footer */}
       <footer className="mt-auto border-t border-slate-100 py-5 px-6 text-center text-[10px] text-slate-400 font-extrabold uppercase tracking-widest bg-white/30 backdrop-blur-md">
-        <span>Senda Dashboard — 2026</span>
+        <span>Ommm Dashboard — 2026</span>
       </footer>
+
+      {/* Profile Modal overlay */}
+      {showProfileModal && user && (
+        <ProfileModal
+          user={user}
+          onClose={() => setShowProfileModal(false)}
+          onUpdateUser={(updatedUser) => setUser(updatedUser)}
+        />
+      )}
 
       {/* Add Widget Modal overlay */}
       {showAddWidgetModal && (

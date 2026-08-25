@@ -132,19 +132,19 @@ export default function WeatherWidget({ data, onChange, isEditing }: WeatherWidg
   const activeWeatherData = getWeatherData(activeCity);
 
   return (
-    <div className="flex flex-col h-full justify-between p-4 text-[#1A1C1E]">
+    <div className="flex flex-col h-full justify-between p-4 text-slate-800 dark:text-slate-100">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2 flex-shrink-0">
+      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-2 mb-2 flex-shrink-0">
         <div className="flex items-center space-x-2">
           <Cloud className="w-4 h-4 text-sky-500" />
-          <span className="text-xs font-bold tracking-wider uppercase text-slate-500 font-display">
+          <span className="text-xs font-bold tracking-wider uppercase text-slate-500 dark:text-slate-400 font-display">
             Comparador de Clima
           </span>
         </div>
         {isEditing && (
           <button
             onClick={() => setShowAdd(!showAdd)}
-            className="p-1 hover:bg-gray-100 rounded text-slate-400 hover:text-slate-700 transition cursor-pointer"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-slate-800 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -152,7 +152,7 @@ export default function WeatherWidget({ data, onChange, isEditing }: WeatherWidg
       </div>
 
       {showAdd ? (
-        <div className="flex-1 flex flex-col justify-center space-y-3 py-2 text-xs text-gray-700">
+        <div className="flex-1 flex flex-col justify-center space-y-3 py-2 text-xs text-gray-700 dark:text-gray-300">
           <div className="flex gap-1.5">
             <input
               type="text"
@@ -160,7 +160,7 @@ export default function WeatherWidget({ data, onChange, isEditing }: WeatherWidg
               value={newCity}
               onChange={(e) => setNewCity(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAddCity()}
-              className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg outline-none text-xs text-slate-900"
+              className="flex-1 px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-xs text-slate-900 dark:text-slate-100"
             />
             <button
               onClick={handleAddCity}
@@ -169,16 +169,16 @@ export default function WeatherWidget({ data, onChange, isEditing }: WeatherWidg
               Añadir
             </button>
           </div>
-          <p className="text-[10px] text-slate-400">Introduce cualquier ciudad para ver sus condiciones simuladas.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Introduce cualquier ciudad para ver sus condiciones simuladas.</p>
         </div>
       ) : (
         <div className="flex-grow grid grid-cols-5 gap-3 min-h-0 overflow-y-auto py-1">
           {/* Active city detail pane */}
-          <div className="col-span-3 bg-gradient-to-br from-sky-50 to-indigo-50/50 rounded-2xl p-3 border border-sky-100/50 flex flex-col justify-between text-sky-950">
+          <div className="col-span-3 bg-gradient-to-br from-sky-50 to-indigo-50/50 dark:from-slate-800/80 dark:to-indigo-950/40 rounded-2xl p-3 border border-sky-100/50 dark:border-slate-700/50 flex flex-col justify-between text-sky-950 dark:text-sky-100">
             <div className="flex justify-between items-start">
               <div className="min-w-0 flex-1 pr-1">
-                <h4 className="font-bold text-sm text-sky-950 tracking-tight leading-tight truncate">{activeCity}</h4>
-                <p className="text-[10px] text-sky-800 font-semibold mt-0.5 capitalize">{activeWeatherData.state}</p>
+                <h4 className="font-bold text-sm text-sky-950 dark:text-white tracking-tight leading-tight truncate">{activeCity}</h4>
+                <p className="text-xs text-sky-800 dark:text-sky-300 font-bold mt-1 capitalize">{activeWeatherData.state}</p>
               </div>
               <div className="flex-shrink-0">
                 {getWeatherIcon(activeWeatherData.state)}
@@ -186,17 +186,17 @@ export default function WeatherWidget({ data, onChange, isEditing }: WeatherWidg
             </div>
 
             <div className="my-2 flex items-baseline">
-              <span className="text-3xl font-black tracking-tight text-sky-900">{activeWeatherData.temp}</span>
-              <span className="text-sm font-bold text-sky-600 ml-0.5">°C</span>
+              <span className="text-3xl font-black tracking-tight text-sky-900 dark:text-sky-200">{activeWeatherData.temp}</span>
+              <span className="text-sm font-bold text-sky-600 dark:text-sky-400 ml-0.5">°C</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-1 border-t border-sky-100 pt-2 text-[10px] text-sky-800">
+            <div className="grid grid-cols-2 gap-1 border-t border-sky-100 dark:border-slate-700 pt-2 text-xs text-sky-800 dark:text-sky-300">
               <div className="flex items-center space-x-1">
                 <Droplets className="w-3 h-3 text-sky-500" />
                 <span className="font-semibold">{activeWeatherData.hum}% Hum</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Wind className="w-3 h-3 text-teal-600" />
+                <Wind className="w-3 h-3 text-teal-600 dark:text-teal-400" />
                 <span className="font-semibold">{activeWeatherData.wind} km/h</span>
               </div>
             </div>
@@ -213,18 +213,18 @@ export default function WeatherWidget({ data, onChange, isEditing }: WeatherWidg
                   onClick={() => onChange({ ...data, activeCity: city })}
                   className={`px-2 py-1.5 rounded-xl border flex items-center justify-between cursor-pointer transition ${
                     isActive
-                      ? "bg-sky-50 border-sky-200 text-sky-800 shadow-sm"
-                      : "bg-gray-50 border-slate-100 hover:bg-gray-100 text-gray-700"
+                      ? "bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-200 shadow-sm"
+                      : "bg-gray-50 dark:bg-slate-850 border-slate-100 dark:border-slate-800 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300"
                   }`}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-bold truncate leading-tight">{city}</p>
-                    <p className="text-[9px] text-slate-500 font-semibold mt-0.5">{info.temp}°C</p>
+                    <p className="text-xs font-bold truncate leading-tight">{city}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1">{info.temp}°C</p>
                   </div>
                   {isEditing && (
                     <button
                       onClick={(e) => handleRemoveCity(city, e)}
-                      className="p-0.5 text-red-500 hover:text-red-700 hover:bg-gray-100 rounded transition cursor-pointer ml-1"
+                      className="p-0.5 text-red-500 hover:text-red-700 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition cursor-pointer ml-1"
                     >
                       <Trash2 className="w-2.5 h-2.5" />
                     </button>

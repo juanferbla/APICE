@@ -29,9 +29,9 @@ export default function NotesWidget({ data, onChange, isEditing }: NotesWidgetPr
   };
 
   return (
-    <div className="flex flex-col h-full justify-between p-4 text-[#1A1C1E]">
+    <div className="flex flex-col h-full justify-between p-4 text-slate-800 dark:text-slate-100">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 mb-2">
+      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-1.5 mb-2">
         <div className="flex items-center space-x-2 min-w-0">
           <span className="text-sm">{emoji}</span>
           {editMode ? (
@@ -39,10 +39,10 @@ export default function NotesWidget({ data, onChange, isEditing }: NotesWidgetPr
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="bg-transparent border-b border-slate-200 font-bold text-xs text-slate-800 focus:outline-none focus:border-indigo-500 max-w-[120px]"
+              className="bg-transparent border-b border-slate-200 dark:border-slate-750 font-bold text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500 max-w-[120px]"
             />
           ) : (
-            <span className="text-xs font-bold truncate text-slate-500 font-display">
+            <span className="text-xs font-bold truncate text-slate-500 dark:text-slate-400 font-display">
               {title}
             </span>
           )}
@@ -51,7 +51,7 @@ export default function NotesWidget({ data, onChange, isEditing }: NotesWidgetPr
         {isEditing && (
           <button
             onClick={editMode ? handleSave : () => setEditMode(true)}
-            className="p-1 hover:bg-gray-100 rounded text-slate-400 hover:text-slate-700 transition cursor-pointer"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-slate-800 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer"
           >
             {editMode ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Edit className="w-3.5 h-3.5" />}
           </button>
@@ -64,7 +64,7 @@ export default function NotesWidget({ data, onChange, isEditing }: NotesWidgetPr
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="flex-grow p-2 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-500 resize-none text-[11px] leading-relaxed text-slate-800"
+            className="flex-grow p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-indigo-500 resize-none text-xs leading-relaxed text-slate-800 dark:text-slate-100"
             placeholder="Escribe tu nota aquí..."
           />
           {/* Emoji selector */}
@@ -73,7 +73,8 @@ export default function NotesWidget({ data, onChange, isEditing }: NotesWidgetPr
               <button
                 key={e}
                 onClick={() => setEmoji(e)}
-                className={`p-1 rounded text-sm transition cursor-pointer ${emoji === e ? "bg-indigo-50 border border-indigo-200" : "hover:bg-gray-100"}`}
+                className={`p-1 rounded text-sm transition cursor-pointer ${emoji === e ? "border" : "hover:bg-gray-100 dark:hover:bg-slate-800"}`}
+                style={emoji === e ? { backgroundColor: "rgba(79, 107, 255, 0.08)", borderColor: "var(--color-role-active)" } : undefined}
               >
                 {e}
               </button>
@@ -82,8 +83,8 @@ export default function NotesWidget({ data, onChange, isEditing }: NotesWidgetPr
         </div>
       ) : (
         <div className="flex-grow flex flex-col min-h-0">
-          <div className="flex-1 overflow-y-auto pr-0.5 text-xs font-medium leading-relaxed whitespace-pre-wrap text-gray-700">
-            {text || <span className="text-slate-400 italic">No hay notas guardadas. Pulsa editar para escribir tus pensamientos.</span>}
+          <div className="flex-1 overflow-y-auto pr-0.5 text-xs font-medium leading-relaxed whitespace-pre-wrap text-slate-700 dark:text-slate-200">
+            {text || <span className="text-slate-500 dark:text-slate-400 italic">No hay notas guardadas. Pulsa editar para escribir tus pensamientos.</span>}
           </div>
         </div>
       )}

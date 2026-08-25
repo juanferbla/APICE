@@ -39,7 +39,7 @@ export default function BookmarksWidget({ data, onChange, isEditing }: Bookmarks
       id: `bm-${Date.now()}`,
       label: label.trim(),
       url: formattedUrl,
-      description: desc.trim() || undefined
+      ...(desc.trim() ? { description: desc.trim() } : {})
     };
 
     onChange({
@@ -78,7 +78,7 @@ export default function BookmarksWidget({ data, onChange, isEditing }: Bookmarks
   };
 
   return (
-    <div className="flex flex-col h-full justify-between p-4 text-[#1A1C1E]">
+    <div className="flex flex-col h-full justify-between p-4 text-slate-800 dark:text-slate-100">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
         <div className="flex items-center space-x-2">
@@ -135,37 +135,37 @@ export default function BookmarksWidget({ data, onChange, isEditing }: Bookmarks
       </div>
 
       {showConfig ? (
-        <div className="flex-1 flex flex-col justify-center space-y-2 text-xs py-1 text-gray-700">
+        <div className="flex-1 flex flex-col justify-center space-y-2 text-xs py-1 text-gray-700 dark:text-slate-300">
           <div className="grid grid-cols-2 gap-1.5">
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Nombre</label>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Nombre</label>
               <input
                 type="text"
                 placeholder="Google"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg outline-none text-slate-900"
+                className="w-full px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-slate-900 dark:text-slate-100 text-xs"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Dirección (URL)</label>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Dirección (URL)</label>
               <input
                 type="text"
                 placeholder="google.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg outline-none text-slate-900"
+                className="w-full px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-slate-900 dark:text-slate-100 text-xs"
               />
             </div>
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Descripción (Opcional)</label>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Descripción (Opcional)</label>
             <input
               type="text"
               placeholder="Buscador global de información"
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
-              className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg outline-none text-slate-900"
+              className="w-full px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-slate-900 dark:text-slate-100 text-xs"
             />
           </div>
           <button
@@ -178,7 +178,7 @@ export default function BookmarksWidget({ data, onChange, isEditing }: Bookmarks
       ) : (
         <div className="flex-grow min-h-0 overflow-y-auto pr-0.5 py-1">
           {bookmarks.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-[11px] text-slate-500 italic">
+            <div className="h-full flex items-center justify-center text-xs text-slate-500 dark:text-slate-400 italic">
               No hay enlaces agregados aún.
             </div>
           ) : style === "list" ? (
@@ -243,7 +243,7 @@ export default function BookmarksWidget({ data, onChange, isEditing }: Bookmarks
                         <Globe className="w-4 h-4 text-emerald-500" />
                       )}
                     </div>
-                    <span className="text-[10px] font-bold text-gray-700 mt-1.5 truncate w-full px-0.5 leading-tight">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200 mt-1.5 truncate w-full px-0.5 leading-tight">
                       {bm.label}
                     </span>
                   </a>
@@ -258,7 +258,7 @@ export default function BookmarksWidget({ data, onChange, isEditing }: Bookmarks
                     href={bm.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-2.5 py-1 bg-emerald-50 border border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100/50 rounded-full text-[10px] font-bold text-emerald-700 tracking-tight transition inline-flex items-center space-x-1"
+                    className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-850 hover:border-emerald-300 hover:bg-emerald-100/50 rounded-full text-xs font-bold text-emerald-700 dark:text-emerald-300 tracking-tight transition inline-flex items-center space-x-1"
                   >
                     <span>{bm.label}</span>
                     <ExternalLink className="w-2.5 h-2.5 text-emerald-600/60" />
@@ -290,8 +290,8 @@ export default function BookmarksWidget({ data, onChange, isEditing }: Bookmarks
                       <Globe className="w-3.5 h-3.5 text-emerald-500" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h5 className="font-bold text-gray-800 group-hover:text-emerald-600 transition text-[11px] leading-snug">{bm.label}</h5>
-                      <p className="text-[10px] text-slate-500 truncate mt-0.5">{bm.description || bm.url}</p>
+                      <h5 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 transition text-xs leading-snug">{bm.label}</h5>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">{bm.description || bm.url}</p>
                     </div>
                   </div>
                   {isEditing ? (

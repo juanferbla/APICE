@@ -1,0 +1,24 @@
+{
+  "collections": [
+    {
+      "name": "users",
+      "schema": {
+        "email": "string",
+        "username": "string",
+        "photoURL": "string",
+        "createdAt": "timestamp",
+        "dashboards": "array"
+      }
+    },
+    {
+      "name": "users/{userId}/sessions",
+      "schema": {
+        "id": "string",
+        "startTime": "string",
+        "endTime": "string",
+        "activityState": "string",
+        "durationSeconds": "number"
+      }
+    }
+  ]
+}

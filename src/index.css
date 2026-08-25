@@ -5,4 +5,227 @@
   --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Custom Design Tokens matching specifications */
+  --color-brand-primary: var(--color-primary);
+  --color-brand-secondary: var(--color-secondary);
+  --color-brand-accent: var(--color-accent);
+  
+  --color-bg-default: var(--bg-default);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-border-default: var(--border-default);
+  --color-divider-default: var(--divider-default);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-disabled: var(--text-disabled);
+
+  --color-state-success: #22C55E;
+  --color-state-warning: #F59E0B;
+  --color-state-error: #EF4444;
+  --color-state-info: #3B82F6;
+
+  /* Workspace Role Colors */
+  --color-role-work: #4F6BFF;
+  --color-role-personal: #16A34A;
+  --color-role-learning: #EA580C;
+  --color-role-health: #14B8A6;
+  --color-role-relationships: #EC4899;
+  --color-role-passion: #8B5CF6;
+  --color-role-active: var(--color-role-active-val);
+
+  /* Focus Mental States */
+  --color-focus-deep: #2563EB;
+  --color-focus-creative: #7C3AED;
+  --color-focus-analysis: #0F766E;
+  --color-focus-communication: #0284C7;
+  --color-focus-planning: #6366F1;
+  --color-focus-learning: #EA580C;
+  --color-focus-rest: #16A34A;
+  --color-focus-stress: #DC2626;
+  --color-focus-energy-high: #F59E0B;
+  --color-focus-energy-low: #64748B;
+
+  /* Gray Scale Scale of 11 Levels */
+  --color-gray-50: #F8FAFC;
+  --color-gray-100: #F1F5F9;
+  --color-gray-200: #E2E8F0;
+  --color-gray-300: #CBD5E1;
+  --color-gray-400: #94A3B8;
+  --color-gray-500: #64748B;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1E293B;
+  --color-gray-900: #0F172A;
+  --color-gray-950: #020617;
 }
+
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Design Tokens Base values */
+  --color-primary: #4F6BFF;
+  --color-secondary: #7A5AF8;
+  --color-accent: #00B8D9;
+
+  /* Theme Backgrounds */
+  --bg-default: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --border-default: #E2E8F0;
+  --divider-default: #CBD5E1;
+
+  /* Theme Text */
+  --text-primary: #0F172A;
+  --text-secondary: #27303F;
+  --text-tertiary: #4A5568;
+  --text-disabled: #5E697A;
+
+  /* Interactive States */
+  --interactive-hover: rgba(79, 107, 255, 0.08);
+  --interactive-pressed: rgba(79, 107, 255, 0.24);
+  
+  /* Fallback active role value */
+  --color-role-active-val: #16A34A;
+}
+
+.dark {
+  /* Premium Deep Forest & Sage Zen Color Palette (Wellness Mockup) */
+  --bg-default: #0A110D;      /* Deep, atmospheric charcoal spruce green */
+  --bg-surface: #121E19;      /* Rich dark spruce/sage container background */
+  --bg-elevated: #1B2E26;     /* Cohesive dark sage for secondary cards/inner sections */
+  --border-default: #253E34;  /* Refined organic spruce borders */
+  --divider-default: #325245; /* Clean sage-green dividers */
+
+  /* Muted Elegant Ivory & Mint Text Hierarchy */
+  --text-primary: #F0FDF4;    /* Highly readable glowing off-white/mint */
+  --text-secondary: #B1D1C4;  /* Soft sage-mint secondary text */
+  --text-tertiary: #7D9F91;   /* Atmospheric spruce-gray helper text */
+  --text-disabled: #4F6D61;   /* Muted dark forest placeholder/disabled state */
+
+  /* Glowing Interactive Brand Accents */
+  --color-primary: #5BE2A9;   /* Stunning glowing mint green primary */
+  --color-secondary: #A7F3D0; /* Soft pastel sage secondary */
+  --color-accent: #34D399;    /* Vibrant emerald-mint accent */
+  --interactive-hover: rgba(91, 226, 169, 0.12);
+  --interactive-pressed: rgba(91, 226, 169, 0.20);
+}
+
+/* Base Accessibility Styles */
+body {
+  background-color: var(--bg-default);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom global scrollbar variables */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-default);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--divider-default);
+}
+
+/* 
+  Global Dynamic Adaptive Theme Bridge Layer
+  This layer ensures that ALL widgets immediately comply with the design system tokens 
+  using high-contrast, WCAG AA verified styles for both themes.
+*/
+.bg-white {
+  background-color: var(--bg-surface) !important;
+}
+.bg-slate-50, .bg-gray-50 {
+  background-color: var(--bg-elevated) !important;
+}
+.bg-slate-50\/50, .bg-gray-50\/50 {
+  background-color: rgba(17, 24, 39, 0.03) !important;
+}
+.dark .bg-slate-50\/50, .dark .bg-gray-50\/50 {
+  background-color: rgba(25, 35, 68, 0.45) !important;
+}
+
+/* Dynamic Text contrast classes override */
+.text-slate-900, .text-gray-900, .text-slate-950, .text-[#1A1C1E] {
+  color: var(--text-primary) !important;
+}
+.text-slate-800, .text-gray-800, .text-slate-700, .text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+.text-slate-600, .text-gray-600, .text-slate-500, .text-gray-500, .text-slate-400, .text-gray-400 {
+  color: var(--text-tertiary) !important;
+}
+
+/* Borders and dividers */
+.border-slate-100, .border-slate-200, .border-gray-100, .border-gray-200, .border-[#E1E4E8] {
+  border-color: var(--border-default) !important;
+}
+.divide-slate-100, .divide-slate-200, .divide-gray-150 {
+  border-color: var(--divider-default) !important;
+}
+
+/* Inputs, Textareas & Controls */
+input[type="text"], input[type="number"], input[type="date"], select, textarea {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-default) !important;
+  transition: all 0.2s ease;
+}
+input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: -1px;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--text-disabled) !important;
+}
+
+/* Hover dynamic states */
+.hover\:bg-slate-50:hover, .hover\:bg-gray-50:hover {
+  background-color: var(--interactive-hover) !important;
+}
+.hover\:text-slate-900:hover, .hover\:text-gray-900:hover {
+  color: var(--text-primary) !important;
+}
+
+/* Accessible sutil indicators for mental state badges */
+.badge-focus-deep { background-color: rgba(37, 99, 235, 0.15); color: #2563EB; }
+.badge-focus-creative { background-color: rgba(124, 58, 237, 0.15); color: #8B5CF6; }
+.badge-focus-analysis { background-color: rgba(15, 118, 110, 0.15); color: #14B8A6; }
+.badge-focus-rest { background-color: rgba(22, 163, 74, 0.15); color: #16A34A; }
+.badge-focus-stress { background-color: rgba(220, 38, 38, 0.15); color: #EF4444; }
+
+.dark .badge-focus-deep { background-color: rgba(37, 99, 235, 0.25); color: #60a5fa; }
+.dark .badge-focus-creative { background-color: rgba(124, 58, 237, 0.25); color: #c084fc; }
+.dark .badge-focus-analysis { background-color: rgba(15, 118, 110, 0.25); color: #2dd4bf; }
+.dark .badge-focus-rest { background-color: rgba(22, 163, 74, 0.25); color: #4ade80; }
+.dark .badge-focus-stress { background-color: rgba(220, 38, 38, 0.25); color: #f87171; }
+
+/* Dark Mode Slate/Gray-to-Sage Harmonic Shift Override Layer */
+.dark .bg-slate-950, .dark .bg-slate-900, .dark .bg-gray-950, .dark .bg-gray-900, .dark .bg-neutral-950, .dark .bg-neutral-900 {
+  background-color: var(--bg-surface) !important;
+}
+.dark .bg-slate-850, .dark .bg-slate-800, .dark .bg-slate-750, .dark .bg-slate-700, .dark .bg-gray-850, .dark .bg-gray-800, .dark .bg-gray-700 {
+  background-color: var(--bg-elevated) !important;
+}
+.dark .border-slate-900, .dark .border-slate-800, .dark .border-slate-750, .dark .border-slate-700, .dark .border-slate-600, .dark .border-gray-800, .dark .border-gray-700 {
+  border-color: var(--border-default) !important;
+}
+.dark .text-slate-400, .dark .text-slate-500, .dark .text-gray-400, .dark .text-gray-500 {
+  color: var(--text-tertiary) !important;
+}
+.dark .text-slate-300, .dark .text-slate-200, .dark .text-gray-300, .dark .text-gray-200 {
+  color: var(--text-secondary) !important;
+}
+.dark .text-slate-100, .dark .text-gray-100 {
+  color: var(--text-primary) !important;
+}
+

@@ -6,6 +6,7 @@ export interface User {
   id: string;
   email: string;
   username: string;
+  photoURL?: string;
 }
 
 export interface Bookmark {
@@ -23,6 +24,9 @@ export interface TaskItem {
   text: string;
   done: boolean;
   priority?: 'low' | 'medium' | 'high';
+  deadline?: string;
+  dueDate?: string;
+  description?: string;
 }
 
 export interface TaskList {
@@ -57,7 +61,7 @@ export interface FocusSession {
 
 export interface Widget {
   id: string;
-  type: 'clock' | 'pomodoro' | 'weather' | 'calendar' | 'lists' | 'currency' | 'calculator' | 'notes' | 'image' | 'bookmarks' | 'newsfeed' | 'embed' | 'google-tasks' | 'habit-tracker' | 'daily-planner';
+  type: 'time-machine' | 'clock' | 'pomodoro' | 'weather' | 'calendar' | 'lists' | 'currency' | 'calculator' | 'notes' | 'image' | 'bookmarks' | 'newsfeed' | 'embed' | 'google-tasks' | 'habit-tracker' | 'daily-planner';
   title: string;
   x: number; // Column position (0 to 11)
   y: number; // Row position

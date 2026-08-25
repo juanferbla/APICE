@@ -34,7 +34,7 @@ export default function NewsfeedWidget({ data, onChange, isEditing }: NewsfeedWi
       // Adapt mock items title to give customized feel if they set a different URL
       if (url.toLowerCase().includes("sport") || url.toLowerCase().includes("deporte")) {
         mockItems = [
-          { title: "Campeonato Mundial de Atletismo 2026: Crónica diaria", link: "https://example.com", date: "Hace 30 min", source: "Senda Sports" },
+          { title: "Campeonato Mundial de Atletismo 2026: Crónica diaria", link: "https://example.com", date: "Hace 30 min", source: "Ommm Sports" },
           { title: "Entrenamiento de alta intensidad para optimizar el rendimiento laboral", link: "https://example.com", date: "Hace 3 horas", source: "Fitness & Time" }
         ];
       } else if (url.toLowerCase().includes("money") || url.toLowerCase().includes("finanz")) {

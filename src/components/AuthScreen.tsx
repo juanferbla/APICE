@@ -1,48 +1,120 @@
 import React, { useState } from "react";
-import { LayoutDashboard, LogIn, UserPlus, ShieldAlert, Sparkles, Layout, FolderKanban, CheckSquare, Smile } from "lucide-react";
+import {
+  LayoutDashboard,
+  LogIn,
+  UserPlus,
+  ShieldAlert,
+  Sparkles,
+  Layout,
+  FolderKanban,
+  CheckSquare,
+  Smile,
+  Mail,
+  Send,
+  Chrome,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 import { api } from "../utils/api";
 
 interface AuthScreenProps {
-  onAuthSuccess: (user: { id: string; email: string; username: string }) => void;
+  onAuthSuccess: (user: { id: string; email: string; username: string; photoURL?: string }) => void;
 }
 
 export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("juanferbla@gmail.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  
+  // Custom states for verification handling
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsUnverified(false);
+    setVerificationSent(false);
     setLoading(true);
 
     try {
       if (isLogin) {
+        // Try standard login
         const user = await api.login(email, password);
         api.setUserId(user.id);
         onAuthSuccess(user);
       } else {
-        if (!username) {
+        if (!username.trim()) {
           throw new Error("El nombre de usuario es requerido.");
         }
-        const user = await api.signup(email, username, password);
-        api.setUserId(user.id);
-        onAuthSuccess(user);
+        if (password.length < 6) {
+          throw new Error("La contraseña debe tener al menos 6 caracteres.");
+        }
+        
+        await api.signup(email, username, password);
+        // Signup was successful, verification email sent!
+        setVerificationSent(true);
+        setIsLogin(true); // Switch to login view
+        setPassword(""); // Clear password for security
       }
     } catch (err: any) {
+      if (err.message && (err.message.includes("verificar tu correo") || err.message.includes("verification"))) {
+        setIsUnverified(true);
+      }
       setError(err.message || "Ocurrió un error inesperado.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setIsUnverified(false);
+    setVerificationSent(false);
+    setLoading(true);
+
+    try {
+      const user = await api.signInWithGoogle();
+      api.setUserId(user.id);
+      onAuthSuccess(user);
+    } catch (err: any) {
+      setError(err.message || "Error al iniciar sesión con Google.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email || !password) {
+      setError("Por favor ingresa tu correo y contraseña para reenviar la activación.");
+      return;
+    }
+    setResendLoading(true);
+    setError(null);
+    try {
+      await api.resendVerification(email, password);
+      setVerificationSent(true);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || "Error al reenviar el enlace.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   const loadDemo = () => {
+    // In Firebase context, demo accounts must be real accounts in the database.
+    // If the user wants a demo account, we can notify them to sign up, or we can use our seeded juanferbla@gmail.com account
     setEmail("juanferbla@gmail.com");
     setPassword("123456");
     setIsLogin(true);
+    setError(null);
+    setIsUnverified(false);
   };
 
   return (
@@ -58,7 +130,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             <LayoutDashboard className="w-6 h-6" />
           </div>
           <span className="text-xl font-black tracking-tight text-gray-800 font-display">
-            Senda Dashboard
+            Ommm Dashboard
           </span>
         </div>
 
@@ -73,7 +145,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
           </h1>
           
           <p className="text-slate-500 leading-relaxed text-sm md:text-base font-medium">
-            Inspirado en los mejores lanzadores de productividad, Senda te ofrece tableros personalizados, widgets interactivos totalmente adaptables y análisis inteligente para que rindas tu tiempo y disfrutes tus hábitos.
+            Inspirado en los mejores lanzadores de productividad, Ommm te ofrece tableros personalizados, widgets interactivos totalmente adaptables y análisis inteligente para que rindas tu tiempo y disfrutes tus hábitos de forma segura.
           </p>
 
           {/* Key Pillars */}
@@ -113,7 +185,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 <Smile className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-gray-800">Senda Coach AI</h4>
+                <h4 className="text-xs font-bold text-gray-800">Ommm Coach AI</h4>
                 <p className="text-[11px] text-slate-500 font-medium">Consejos de enfoque con Gemini server-side.</p>
               </div>
             </div>
@@ -127,10 +199,10 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
       {/* Auth Form Column */}
       <div className="flex-1 flex items-center justify-center p-8 md:p-16 z-10 bg-slate-100/10">
-        <div className="w-full max-w-md bg-white border border-[#E1E4E8] rounded-2xl p-6 md:p-8 shadow-xl">
-          <div className="text-center mb-8">
+        <div className="w-full max-w-md bg-white border border-[#E1E4E8] rounded-3xl p-6 md:p-8 shadow-xl">
+          <div className="text-center mb-6">
             <h2 className="text-2xl font-black tracking-tight text-gray-900 font-display">
-              {isLogin ? "Bienvenido de nuevo" : "Crea tu espacio"}
+              {isLogin ? "Bienvenido de nuevo" : "Crea tu cuenta de Ommm"}
             </h2>
             <p className="text-slate-500 text-xs font-semibold mt-2">
               {isLogin
@@ -139,11 +211,66 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             </p>
           </div>
 
+          {/* Social Sign In (Google) */}
+          <div className="mb-6">
+            <button
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full py-2.5 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 font-bold rounded-xl text-xs border border-slate-200 shadow-sm transition flex items-center justify-center space-x-2.5 cursor-pointer disabled:opacity-50"
+            >
+              <Chrome className="w-4 h-4 text-indigo-600" />
+              <span>Continuar con Google</span>
+            </button>
+            <div className="relative flex items-center justify-center my-5">
+              <div className="border-t border-slate-100 w-full"></div>
+              <span className="absolute bg-white px-3 text-[10px] uppercase font-black tracking-wider text-slate-400">O ingresa con tu correo</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-xs flex items-center space-x-2 font-semibold">
-                <ShieldAlert className="w-4 h-4 flex-shrink-0" />
+            {error && !isUnverified && (
+              <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-xs flex items-start space-x-2 font-semibold">
+                <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span>{error}</span>
+              </div>
+            )}
+
+            {/* Email Verification Banner */}
+            {isUnverified && (
+              <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl text-xs space-y-3 font-semibold">
+                <div className="flex items-start space-x-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
+                  <span>Por favor, verifica tu dirección de correo electrónico para activar tu cuenta de Ommm.</span>
+                </div>
+                <div className="text-[11px] text-amber-700">
+                  Hemos enviado un enlace de activación a <strong>{email}</strong>. Por favor haz clic en él para proceder.
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resendLoading}
+                  className="w-full py-1.5 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer disabled:opacity-50"
+                >
+                  {resendLoading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="w-3 h-3" />
+                      <span>Reenviar enlace de activación</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Email Verification Success Notice */}
+            {verificationSent && (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs flex items-start space-x-2 font-semibold">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-600" />
+                <div className="space-y-1">
+                  <div>¡Enlace de activación enviado!</div>
+                  <div className="text-[11px] text-emerald-700">Revisa tu bandeja de entrada en <strong>{email}</strong> para activar tu cuenta de Ommm antes de iniciar sesión.</div>
+                </div>
               </div>
             )}
 
@@ -156,6 +283,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-slate-200 focus:bg-white focus:border-indigo-500 rounded-xl text-sm text-slate-900 outline-none transition"
+                  required={!isLogin}
                 />
               </div>
             )}
@@ -187,14 +315,14 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 mt-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm transition flex items-center justify-center space-x-2 shadow-md shadow-indigo-600/10 cursor-pointer disabled:opacity-50"
+              className="w-full py-2.5 mt-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-xs transition flex items-center justify-center space-x-2 shadow-md shadow-indigo-600/10 cursor-pointer disabled:opacity-50"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
                   {isLogin ? <LogIn className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-                  <span>{isLogin ? "Iniciar Sesión" : "Crear Cuenta"}</span>
+                  <span>{isLogin ? "Iniciar Sesión" : "Crear Cuenta Verificable"}</span>
                 </>
               )}
             </button>
@@ -207,7 +335,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 onClick={loadDemo}
                 className="text-indigo-600 hover:text-indigo-800 text-xs font-bold underline cursor-pointer"
               >
-                Cargar Demo (juanferbla@gmail.com)
+                Autocompletar juanferbla@gmail.com
               </button>
             </div>
           )}
@@ -217,6 +345,8 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
               onClick={() => {
                 setIsLogin(!isLogin);
                 setError(null);
+                setIsUnverified(false);
+                setVerificationSent(false);
               }}
               className="text-slate-500 hover:text-indigo-600 text-xs transition font-semibold cursor-pointer"
             >

@@ -14,17 +14,29 @@ const DB_FILE = path.join(process.cwd(), "db.json");
 
 app.use(express.json());
 
-// Initialize Gemini SDK with telemetry header
-const ai = process.env.GEMINI_API_KEY
-  ? new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          "User-Agent": "aistudio-build",
+// Lazy initialization for Gemini SDK
+let aiClient: GoogleGenAI | null = null;
+function getAiClient(): GoogleGenAI | null {
+  if (!process.env.GEMINI_API_KEY) {
+    return null;
+  }
+  if (!aiClient) {
+    try {
+      aiClient = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            "User-Agent": "aistudio-build",
+          },
         },
-      },
-    })
-  : null;
+      });
+    } catch (e) {
+      console.warn("Failed to initialize Gemini SDK:", e);
+      return null;
+    }
+  }
+  return aiClient;
+}
 
 // Simple SHA-256 hashing helper using native crypto
 function hashPassword(password: string): string {
@@ -68,20 +80,28 @@ function createDefaultDashboards(userId: string) {
       wallpaperType: "gradient",
       widgets: [
         {
-          id: "w-p-clock",
-          type: "clock",
-          title: "Mi Tiempo",
-          x: 0, y: 0, w: 4, h: 4,
+          id: "w-p-timemachine",
+          type: "time-machine",
+          title: "Máquina del Tiempo",
+          x: 0, y: 0, w: 4, h: 5,
           color: "bg-slate-900/60 backdrop-blur-md border border-slate-700/50",
           data: {
-            showAnalog: true,
+            activeTab: "pomodoro",
+            workTime: 25,
+            shortBreak: 5,
+            longBreak: 15,
             showSeconds: true,
-            countdownDate: "2026-12-31T23:59:59",
-            countdownLabel: "Fin de Año",
+            is24Hour: true,
+            musicPresetId: "lofi",
+            youtubeVideoId: "jfKfPfyJRdk",
             clocks: [
               { label: "Local", timezone: "local" },
               { label: "Madrid", timezone: "Europe/Madrid" },
               { label: "New York", timezone: "America/New_York" }
+            ],
+            countdowns: [
+              { id: "cd-p1", label: "Fin de Año 2026", date: "2026-12-31T23:59:59", icon: "✨" },
+              { id: "cd-p2", label: "Próxima Meta Personal", date: "2026-09-30T18:00:00", icon: "🎯" }
             ]
           }
         },
@@ -131,7 +151,7 @@ function createDefaultDashboards(userId: string) {
           id: "w-p-bookmarks",
           type: "bookmarks",
           title: "Mis Enlaces Rápidos",
-          x: 0, y: 4, w: 4, h: 4,
+          x: 0, y: 5, w: 4, h: 4,
           color: "bg-slate-900/60 backdrop-blur-md border border-slate-700/50",
           data: {
             displayStyle: "icons",
@@ -167,37 +187,35 @@ function createDefaultDashboards(userId: string) {
       wallpaperType: "gradient",
       widgets: [
         {
-          id: "w-t-focus",
-          type: "lists", // Simulates focus list
-          title: "Estado de Enfoque",
-          x: 0, y: 0, w: 3, h: 3,
-          color: "bg-slate-900/60 backdrop-blur-md border border-blue-500/20",
+          id: "w-t-timemachine",
+          type: "time-machine",
+          title: "Máquina del Tiempo",
+          x: 0, y: 0, w: 4, h: 5,
+          color: "bg-slate-900/60 backdrop-blur-md border border-blue-500/30",
           data: {
-            name: "Llamadas e Interacciones",
-            tasks: [
-              { id: "t-f1", text: "En llamada con clientes", done: false, priority: "high" },
-              { id: "t-f2", text: "Trabajando en código core", done: true, priority: "high" },
-              { id: "t-f3", text: "Creatividad / Brainstorming", done: false, priority: "medium" }
+            activeTab: "pomodoro",
+            workTime: 45,
+            shortBreak: 10,
+            longBreak: 20,
+            showSeconds: true,
+            is24Hour: true,
+            musicPresetId: "synth",
+            youtubeVideoId: "4xDzrJKXOOY",
+            clocks: [
+              { label: "Local", timezone: "local" },
+              { label: "Madrid", timezone: "Europe/Madrid" },
+              { label: "New York", timezone: "America/New_York" }
+            ],
+            countdowns: [
+              { id: "cd-t1", label: "Entrega de Proyecto", date: "2026-09-15T17:00:00", icon: "💼" }
             ]
-          }
-        },
-        {
-          id: "w-t-pomodoro",
-          type: "pomodoro",
-          title: "Temporizador de Enfoque",
-          x: 3, y: 0, w: 5, h: 4,
-          color: "bg-red-950/40 backdrop-blur-md border border-red-500/30",
-          data: {
-            workTime: 25,
-            shortBreak: 5,
-            longBreak: 15
           }
         },
         {
           id: "w-t-tasks",
           type: "lists",
           title: "Tareas Laborales",
-          x: 8, y: 0, w: 4, h: 5,
+          x: 4, y: 0, w: 4, h: 5,
           color: "bg-slate-900/60 backdrop-blur-md border border-slate-700/50",
           data: {
             name: "Pendientes Savora",
@@ -214,7 +232,7 @@ function createDefaultDashboards(userId: string) {
           id: "w-t-bookmarks",
           type: "bookmarks",
           title: "Links de Trabajo",
-          x: 0, y: 3, w: 3, h: 5,
+          x: 8, y: 0, w: 4, h: 5,
           color: "bg-slate-900/60 backdrop-blur-md border border-slate-700/50",
           data: {
             displayStyle: "detailed",
@@ -230,7 +248,7 @@ function createDefaultDashboards(userId: string) {
           id: "w-t-currency",
           type: "currency",
           title: "Conversor de Monedas",
-          x: 3, y: 4, w: 5, h: 4,
+          x: 0, y: 5, w: 4, h: 4,
           color: "bg-slate-900/60 backdrop-blur-md border border-emerald-500/20",
           data: {
             fromCurrency: "USD",
@@ -248,10 +266,34 @@ function createDefaultDashboards(userId: string) {
       wallpaperType: "gradient",
       widgets: [
         {
+          id: "w-e-timemachine",
+          type: "time-machine",
+          title: "Máquina del Tiempo",
+          x: 0, y: 0, w: 4, h: 5,
+          color: "bg-slate-900/60 backdrop-blur-md border border-violet-500/30",
+          data: {
+            activeTab: "pomodoro",
+            workTime: 30,
+            shortBreak: 5,
+            longBreak: 15,
+            showSeconds: true,
+            is24Hour: true,
+            musicPresetId: "piano",
+            youtubeVideoId: "Dx5qFedd3Y4",
+            clocks: [
+              { label: "Local", timezone: "local" },
+              { label: "Londres", timezone: "Europe/London" }
+            ],
+            countdowns: [
+              { id: "cd-e1", label: "Examen Final / Certificación", date: "2026-10-15T09:00:00", icon: "🎓" }
+            ]
+          }
+        },
+        {
           id: "w-e-tasks",
           type: "google-tasks",
           title: "Plan de Estudio",
-          x: 0, y: 0, w: 4, h: 8,
+          x: 4, y: 0, w: 4, h: 8,
           color: "bg-slate-900/60 backdrop-blur-md border border-violet-500/20",
           data: {
             taskLists: [
@@ -279,7 +321,7 @@ function createDefaultDashboards(userId: string) {
           id: "w-e-calc",
           type: "calculator",
           title: "Calculadora de Operaciones",
-          x: 4, y: 0, w: 4, h: 4,
+          x: 8, y: 0, w: 4, h: 4,
           color: "bg-slate-900/60 backdrop-blur-md border border-slate-700/50",
           data: {}
         },
@@ -287,7 +329,7 @@ function createDefaultDashboards(userId: string) {
           id: "w-e-notes",
           type: "notes",
           title: "Apuntes de Clase",
-          x: 8, y: 0, w: 4, h: 4,
+          x: 8, y: 4, w: 4, h: 4,
           color: "bg-slate-900/60 backdrop-blur-md border border-slate-700/50",
           data: {
             title: "Concepto Clave",
@@ -305,10 +347,34 @@ function createDefaultDashboards(userId: string) {
       wallpaperType: "gradient",
       widgets: [
         {
+          id: "w-h-timemachine",
+          type: "time-machine",
+          title: "Máquina del Tiempo",
+          x: 0, y: 0, w: 4, h: 5,
+          color: "bg-slate-900/60 backdrop-blur-md border border-purple-500/30",
+          data: {
+            activeTab: "music",
+            workTime: 25,
+            shortBreak: 5,
+            longBreak: 15,
+            showSeconds: true,
+            is24Hour: true,
+            musicPresetId: "jazz",
+            youtubeVideoId: "5wSBy6Yq_A8",
+            clocks: [
+              { label: "Local", timezone: "local" },
+              { label: "Tokio", timezone: "Asia/Tokyo" }
+            ],
+            countdowns: [
+              { id: "cd-h1", label: "Lanzamiento Nuevo Juego / Álbum", date: "2026-11-20T00:00:00", icon: "🎮" }
+            ]
+          }
+        },
+        {
           id: "w-h-news",
           type: "newsfeed",
           title: "Novedades y Artículos",
-          x: 0, y: 0, w: 5, h: 8,
+          x: 4, y: 0, w: 5, h: 8,
           color: "bg-slate-900/60 backdrop-blur-md border border-purple-500/20",
           data: {
             feedUrl: "https://news.google.com/rss",
@@ -324,7 +390,7 @@ function createDefaultDashboards(userId: string) {
           id: "w-h-image",
           type: "image",
           title: "Inspiración Visual",
-          x: 5, y: 0, w: 4, h: 5,
+          x: 9, y: 0, w: 3, h: 4,
           color: "bg-slate-900/60 backdrop-blur-md border border-pink-500/20",
           data: {
             imageUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&auto=format&fit=crop&q=60",
@@ -336,7 +402,7 @@ function createDefaultDashboards(userId: string) {
           id: "w-h-bookmarks",
           type: "bookmarks",
           title: "Inspiración",
-          x: 9, y: 0, w: 3, h: 5,
+          x: 9, y: 4, w: 3, h: 4,
           color: "bg-slate-900/60 backdrop-blur-md border border-slate-700/50",
           data: {
             displayStyle: "cloud",
@@ -359,10 +425,34 @@ function createDefaultDashboards(userId: string) {
       wallpaperType: "gradient",
       widgets: [
         {
+          id: "w-ho-timemachine",
+          type: "time-machine",
+          title: "Máquina del Tiempo",
+          x: 0, y: 0, w: 4, h: 5,
+          color: "bg-slate-900/60 backdrop-blur-md border border-emerald-500/30",
+          data: {
+            activeTab: "clock",
+            workTime: 20,
+            shortBreak: 5,
+            longBreak: 15,
+            showSeconds: true,
+            is24Hour: true,
+            musicPresetId: "nature",
+            youtubeVideoId: "M0AWBn_bS0U",
+            clocks: [
+              { label: "Local", timezone: "local" },
+              { label: "Buenos Aires", timezone: "America/Argentina/Buenos_Aires" }
+            ],
+            countdowns: [
+              { id: "cd-ho1", label: "Vacaciones en Familia", date: "2026-12-15T00:00:00", icon: "🌴" }
+            ]
+          }
+        },
+        {
           id: "w-ho-tasks",
           type: "lists",
           title: "Lista de Compras y Hogar",
-          x: 0, y: 0, w: 4, h: 6,
+          x: 4, y: 0, w: 4, h: 6,
           color: "bg-slate-900/60 backdrop-blur-md border border-emerald-500/20",
           data: {
             name: "Supermercado Semanal",
@@ -378,22 +468,11 @@ function createDefaultDashboards(userId: string) {
           id: "w-ho-weather",
           type: "weather",
           title: "Clima Comparativo",
-          x: 4, y: 0, w: 4, h: 5,
+          x: 8, y: 0, w: 4, h: 5,
           color: "bg-slate-900/60 backdrop-blur-md border border-sky-500/20",
           data: {
             cities: ["Buenos Aires", "Madrid", "Miami"],
             activeCity: "Buenos Aires"
-          }
-        },
-        {
-          id: "w-ho-calendar",
-          type: "calendar",
-          title: "Agenda de Google",
-          x: 8, y: 0, w: 4, h: 6,
-          color: "bg-slate-900/60 backdrop-blur-md border border-slate-700/50",
-          data: {
-            // Embed google calendar code or placeholder layout with custom interactive schedule
-            googleEmbedSrc: "https://calendar.google.com/calendar/embed?src=en.christian%23holiday%40group.v.calendar.google.com"
           }
         }
       ]
@@ -574,25 +653,45 @@ function safeParseJSON(text: string | undefined): any {
   return JSON.parse(cleaned);
 }
 
+// Timeout helper to prevent hanging on slow/failed external API calls
+function withTimeout<T>(promise: Promise<T>, ms: number = 12000): Promise<T> {
+  let timerId: NodeJS.Timeout;
+  const timeout = new Promise<never>((_, reject) => {
+    timerId = setTimeout(() => {
+      reject(new Error("Timeout de petición a Gemini API"));
+    }, ms);
+  });
+  // Prevent unhandled rejection if original promise rejects later
+  promise.catch(() => {});
+  return Promise.race([
+    promise.then((val) => {
+      clearTimeout(timerId);
+      return val;
+    }),
+    timeout
+  ]);
+}
+
 // --- Gemini AI routes ---
 app.post("/api/gemini/generate-motivation", async (req, res) => {
-  const { mood, activityState, focusGoal } = req.body;
-  if (!ai) {
-    return res.json({
-      quote: "¡La constancia y el enfoque superan cualquier reto! Sigue adelante con fuerza.",
-      author: "Senda Coach (Modo Local)",
-      strategy: "Enfócate en completar tu temporizador pomodoro sin interrupciones."
-    });
-  }
-
   try {
+    const { mood, activityState, focusGoal } = req.body;
+    const ai = getAiClient();
+    if (!ai) {
+      return res.json({
+        quote: "¡La constancia y el enfoque superan cualquier reto! Sigue adelante con fuerza.",
+        author: "Ommm Coach (Modo Local)",
+        strategy: "Enfócate en completar tu temporizador pomodoro sin interrupciones."
+      });
+    }
+
     const prompt = `Dame una frase motivacional del día corta (máximo 120 caracteres) y un consejo de estrategia de 1 línea para hoy.
     Mi estado de ánimo inicial: "${mood || 'Normal'}".
     Mi actividad actual: "${activityState || 'Planificando el día'}".
     Mi objetivo o meta actual: "${focusGoal || 'Rendir mi tiempo y mejorar hábitos'}".`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+    const generatePromise = ai.models.generateContent({
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -605,7 +704,7 @@ app.post("/api/gemini/generate-motivation", async (req, res) => {
             },
             author: {
               type: Type.STRING,
-              description: "Nombre de un pensador célebre, filósofo o 'Senda Coach AI'"
+              description: "Nombre de un pensador célebre, filósofo o 'Ommm Coach AI'"
             },
             strategy: {
               type: Type.STRING,
@@ -617,10 +716,11 @@ app.post("/api/gemini/generate-motivation", async (req, res) => {
       }
     });
 
+    const response = await withTimeout(generatePromise, 12000);
     const data = safeParseJSON(response.text);
     res.json(data);
   } catch (err) {
-    console.error("Gemini Motivation generation failed:", err);
+    console.warn("Gemini Motivation generation fallback:", (err as Error)?.message || err);
     res.json({
       quote: "No te midas por lo que has logrado, sino por lo que deberías haber logrado con tu habilidad.",
       author: "John Wooden",
@@ -630,52 +730,62 @@ app.post("/api/gemini/generate-motivation", async (req, res) => {
 });
 
 app.post("/api/gemini/analyze-productivity", async (req, res) => {
-  const userId = req.headers["x-user-id"] as string;
-  if (!userId) {
-    return res.status(401).json({ error: "No autorizado" });
-  }
-
-  const db = readDB();
-  const sessions = db.focusSessions[userId] || [];
-  const dashboards = db.dashboards[userId] || [];
-
-  // Gather basic statistics to feed Gemini
-  const activeHabits: string[] = [];
-  dashboards.forEach((d: any) => {
-    d.widgets.forEach((w: any) => {
-      if (w.type === "habit-tracker" && w.data?.habits) {
-        w.data.habits.forEach((h: any) => {
-          activeHabits.push(`${h.name} (racha: ${h.streak})`);
-        });
-      }
-    });
-  });
-
-  const totalFocusSeconds = sessions.reduce((acc: number, s: any) => acc + (s.durationSeconds || 0), 0);
-  const totalFocusMinutes = Math.round(totalFocusSeconds / 60);
-
-  if (!ai) {
-    return res.json({
-      summary: `Has acumulado ${totalFocusMinutes} minutos de enfoque registrado. Tus hábitos activos son: ${activeHabits.join(", ") || "Ninguno aún"}.`,
-      tips: [
-        "Establece límites claros para evitar la fatiga mental.",
-        "Incrementa la duración de tus bloques creativos en horas de mayor energía.",
-        "Asegúrate de registrar tus hábitos diarios para mantener las rachas activas."
-      ],
-      performanceRating: "Excelente Progreso"
-    });
-  }
-
+  let totalFocusMinutes = 0;
   try {
+    const userId = req.headers["x-user-id"] as string;
+    if (!userId) {
+      return res.status(401).json({ error: "No autorizado" });
+    }
+
+    const db = readDB();
+    const sessions = (req.body && req.body.sessions) || db.focusSessions[userId] || [];
+    const dashboards = (req.body && req.body.dashboards) || db.dashboards[userId] || [];
+
+    // Gather basic statistics to feed Gemini
+    const activeHabits: string[] = [];
+    if (Array.isArray(dashboards)) {
+      dashboards.forEach((d: any) => {
+        if (d && Array.isArray(d.widgets)) {
+          d.widgets.forEach((w: any) => {
+            if (w && w.type === "habit-tracker" && w.data?.habits) {
+              w.data.habits.forEach((h: any) => {
+                activeHabits.push(`${h.name} (racha: ${h.streak || 0})`);
+              });
+            }
+          });
+        }
+      });
+    }
+
+    const totalFocusSeconds = Array.isArray(sessions)
+      ? sessions.reduce((acc: number, s: any) => acc + ((s && s.durationSeconds) || 0), 0)
+      : 0;
+    totalFocusMinutes = Math.round(totalFocusSeconds / 60);
+
+    const ai = getAiClient();
+    if (!ai) {
+      return res.json({
+        summary: `Has acumulado ${totalFocusMinutes} minutos de enfoque registrado. Tus hábitos activos son: ${activeHabits.join(", ") || "Ninguno aún"}.`,
+        tips: [
+          "Establece límites claros para evitar la fatiga mental.",
+          "Incrementa la duración de tus bloques creativos en horas de mayor energía.",
+          "Asegúrate de registrar tus hábitos diarios para mantener las rachas activas."
+        ],
+        performanceRating: "Excelente Progreso"
+      });
+    }
+
     const prompt = `Analiza estos datos de productividad semanales del usuario y ofrécele un informe de alto rendimiento ejecutivo personalizado, profesional, directo y motivante en español:
     - Minutos de Enfoque Total Registrados: ${totalFocusMinutes} minutos
     - Hábitos Activos y Rachas: ${JSON.stringify(activeHabits)}
     - Historial de Estados de Enfoque (actividad/reunión/llamada/distraído): ${JSON.stringify(
-      sessions.slice(-15).map((s) => ({ state: s.activityState, date: s.startTime }))
+      Array.isArray(sessions)
+        ? sessions.slice(-15).map((s) => ({ state: s?.activityState || 'trabajando', date: s?.startTime || '' }))
+        : []
     )}`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+    const generatePromise = ai.models.generateContent({
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -701,12 +811,13 @@ app.post("/api/gemini/analyze-productivity", async (req, res) => {
       }
     });
 
+    const response = await withTimeout(generatePromise, 12000);
     const data = safeParseJSON(response.text);
     res.json(data);
   } catch (err) {
-    console.error("Gemini stats analysis failed:", err);
+    console.warn("Gemini stats analysis fallback:", (err as Error)?.message || err);
     res.json({
-      summary: `Análisis automático no disponible temporalmente. Has registrado un total de ${totalFocusMinutes} minutos de enfoque con foco activo en tus hábitos de auto-disciplina.`,
+      summary: `Análisis de rendimiento: has registrado ${totalFocusMinutes} minutos de enfoque activo en tus actividades.`,
       tips: [
         "Aprovecha las primeras horas del día para el trabajo de máxima complejidad.",
         "Divide tus grandes metas mensuales en pequeñas victorias diarias organizadas en tu plan de hoy.",
@@ -719,23 +830,28 @@ app.post("/api/gemini/analyze-productivity", async (req, res) => {
 
 // Serve Vite dev server or static dist folder
 async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
+  try {
+    if (process.env.NODE_ENV !== "production") {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    } else {
+      const distPath = path.join(process.cwd(), "dist");
+      app.use(express.static(distPath));
+      app.get("*", (req, res) => {
+        res.sendFile(path.join(distPath, "index.html"));
+      });
+    }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
-  });
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://0.0.0.0:${PORT}`);
+    });
+  } catch (err) {
+    console.error("Error starting server:", err);
+    process.exit(1);
+  }
 }
 
 startServer();
