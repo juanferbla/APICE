@@ -35,7 +35,7 @@ export default function StatsDashboard({ sessions }: StatsDashboardProps) {
     reunion: "Reunión",
     llamada: "Llamada",
     distraido: "Distraído",
-    off: "Tiempo Off"
+    off: "Tiempo libre"
   };
 
   const groupedData = Object.keys(stateLabels).map((stateKey, idx) => {

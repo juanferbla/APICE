@@ -9,7 +9,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const DB_FILE = path.join(process.cwd(), "db.json");
 
 app.use(express.json());
@@ -691,7 +691,7 @@ app.post("/api/gemini/generate-motivation", async (req, res) => {
     Mi objetivo o meta actual: "${focusGoal || 'Rendir mi tiempo y mejorar hábitos'}".`;
 
     const generatePromise = ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.7-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -785,7 +785,7 @@ app.post("/api/gemini/analyze-productivity", async (req, res) => {
     )}`;
 
     const generatePromise = ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.7-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -831,27 +831,37 @@ app.post("/api/gemini/analyze-productivity", async (req, res) => {
 // Serve Vite dev server or static dist folder
 async function startServer() {
   try {
-    if (process.env.NODE_ENV !== "production") {
+    const isProd = process.env.NODE_ENV === "production" && fs.existsSync(path.join(process.cwd(), "dist"));
+    if (!isProd) {
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: "spa",
+        root: process.cwd(),
       });
       app.use(vite.middlewares);
     } else {
       const distPath = path.join(process.cwd(), "dist");
       app.use(express.static(distPath));
-      app.get("*", (req, res) => {
+      app.get("*", (_req, res) => {
         res.sendFile(path.join(distPath, "index.html"));
       });
     }
 
-    app.listen(PORT, "0.0.0.0", () => {
+    const server = app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on http://0.0.0.0:${PORT}`);
+    });
+
+    server.on("error", (err: unknown) => {
+      console.error("Server listen error:", err);
     });
   } catch (err) {
     console.error("Error starting server:", err);
     process.exit(1);
   }
 }
+
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
+});
 
 startServer();

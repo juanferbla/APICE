@@ -36,7 +36,7 @@ const ROLE_CONFIGS: Record<
       { value: "habits", label: "Hábitos", icon: Zap, color: "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-100 dark:border-indigo-900/60" },
       { value: "reading", label: "Lectura", icon: Brain, color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-100 dark:border-emerald-900/60" },
       { value: "planning", label: "Planificando", icon: Clock, color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-100 dark:border-amber-900/60" },
-      { value: "off", label: "Tiempo Off", icon: Moon, color: "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 border-slate-100 dark:border-slate-700" }
+      { value: "off", label: "Tiempo libre", icon: Moon, color: "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 border-slate-100 dark:border-slate-700" }
     ]
   },
   trabajo: {
@@ -49,7 +49,7 @@ const ROLE_CONFIGS: Record<
       { value: "reunion", label: "En Reunión", icon: Video, color: "text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border-teal-100 dark:border-teal-900/60" },
       { value: "llamada", label: "En Llamada", icon: Phone, color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-100 dark:border-amber-900/60" },
       { value: "distraido", label: "Distraído", icon: Zap, color: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border-red-100 dark:border-red-900/60" },
-      { value: "off", label: "Tiempo Off", icon: Moon, color: "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 border-slate-100 dark:border-slate-700" }
+      { value: "off", label: "Tiempo libre", icon: Moon, color: "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 border-slate-100 dark:border-slate-700" }
     ]
   },
   estudio: {
@@ -61,7 +61,7 @@ const ROLE_CONFIGS: Record<
       { value: "estudiando", label: "Estudiando", icon: Brain, color: "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 border-violet-100 dark:border-violet-900/60" },
       { value: "practicando", label: "Práctica", icon: Code, color: "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/40 border-pink-100 dark:border-pink-900/60" },
       { value: "lectura", label: "Lectura", icon: Clock, color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-100 dark:border-emerald-900/60" },
-      { value: "off", label: "Tiempo Off", icon: Moon, color: "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 border-slate-100 dark:border-slate-700" }
+      { value: "off", label: "Tiempo libre", icon: Moon, color: "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 border-slate-100 dark:border-slate-700" }
     ]
   },
   hobbies: {
@@ -72,7 +72,7 @@ const ROLE_CONFIGS: Record<
     states: [
       { value: "creando", label: "Creando", icon: Brain, color: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 border-purple-100 dark:border-purple-900/60" },
       { value: "gaming", label: "Gaming/Hobby", icon: Zap, color: "text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/40 border-pink-100 dark:border-pink-900/60" },
-      { value: "off", label: "Tiempo Off", icon: Moon, color: "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 border-slate-100 dark:border-slate-700" }
+      { value: "off", label: "Tiempo libre", icon: Moon, color: "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 border-slate-100 dark:border-slate-700" }
     ]
   },
   hogar: {
@@ -83,7 +83,7 @@ const ROLE_CONFIGS: Record<
     states: [
       { value: "tareas_hogar", label: "Tareas Hogar", icon: Zap, color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-100 dark:border-emerald-900/60" },
       { value: "cocinando", label: "Cocinando", icon: Brain, color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-100 dark:border-amber-900/60" },
-      { value: "off", label: "Tiempo Off", icon: Moon, color: "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 border-slate-100 dark:border-slate-700" }
+      { value: "off", label: "Tiempo libre", icon: Moon, color: "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 border-slate-100 dark:border-slate-700" }
     ]
   }
 };
@@ -176,7 +176,7 @@ export default function StatusTracker({ activeDashboardId, onSessionLogged }: St
           </div>
           <div className="flex items-center space-x-2.5 mt-0.5 min-w-0">
             <span className="text-sm font-black text-gray-800 dark:text-slate-100 truncate">
-              {activeState === "off" ? "Tiempo Off" : currentConfig.label}
+              {activeState === "off" ? "Tiempo libre" : currentConfig.label}
             </span>
             {activeState !== "off" && (
               <span className="font-mono text-xs font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 px-2.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-900/60 tracking-wider">
